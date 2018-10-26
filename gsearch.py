@@ -17,8 +17,8 @@ import re, random, types
 
 from bs4 import BeautifulSoup 
 
-base_url = 'https://www.google.com.hk/'
-results_per_page = 10
+base_url = 'http://www.google.com'
+results_per_page = 25
 
 user_agents = list()
 
@@ -57,9 +57,9 @@ class SearchResult:
     def writeFile(self, filename):
         file = open(filename, 'a')
         try:
-            file.write('url:' + self.url+ '\n')
-            file.write('title:' + self.title + '\n')
-            file.write('content:' + self.content + '\n\n')
+            # file.write('url:' + self.url+ '\n')
+            file.write(self.title.replace("\n"," ") + " " + self.content.replace("\n"," ") + '\n')
+            # file.write('content:' + self.content + '\n\n')
 
         except IOError, e:
             print 'file error:', e
@@ -102,7 +102,7 @@ class GoogleAPI:
         soup = BeautifulSoup(html, 'html.parser')
         div = soup.find('div', id  = 'search')
         if (type(div) != types.NoneType):
-            lis = div.findAll('li', {'class': 'g'})
+            lis = div.findAll('div', {'class': 'g'})
             if(len(lis) > 0):
                 for li in lis:
                     result = SearchResult()
@@ -195,14 +195,20 @@ def crawler():
 
     # set expect search results to be crawled
     expect_num = 10
+    keyword_num = 0 
     # if no parameters, read query keywords from file
     if(len(sys.argv) < 2):
-        keywords = open('./keywords', 'r')
+        keywords = open('./attr_keywords', 'r')
         keyword = keywords.readline()
+        
+        print(str(keyword_num)+"\n")
         while(keyword):
+            print("Processing keyword ("+
+            str(keyword_num)+"): "+keyword)
             results = api.search(keyword, num = expect_num)
+            keyword_num = keyword_num + 1
             for r in results:
-                r.printIt()
+                r.writeFile("/srv/kkotochigov/GoogleSearch/result/attr_test_"+str(keyword_num)+".csv")
             keyword = keywords.readline()
         keywords.close()
     else:
